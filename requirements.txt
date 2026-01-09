@@ -1,0 +1,5 @@
+fastmcp
+playwright
+ollama
+requests
+beautifulsoup4
