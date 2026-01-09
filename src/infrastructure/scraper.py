@@ -10,7 +10,7 @@ class Mp3JuiceScraper:
         self.headless = headless
         self.base_url = "https://mp3juice.as/"
 
-    def get_download_link(self, song_title: str) -> str:
+    def get_download_link(self, song_title: str) -> dict:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
             page = browser.new_page()
@@ -23,35 +23,35 @@ class Mp3JuiceScraper:
                 page.fill('#q', song_title)
                 page.click('button[type="submit"]')
 
-                # Wait for results and click the first download button
-                # The user provided snippet: <a href="#" data-id="...">MP3 Download</a>
-                # We wait for any anchor with data-id
-                selector_first_dl = 'a[data-id]'
+                # Wait for results
+                selector_result_container = 'div.result'
                 logger.info("Waiting for search results...")
-                page.wait_for_selector(selector_first_dl)
+                page.wait_for_selector(selector_result_container)
                 
-                # Get the first result
-                # Sometimes there are multiple, we pick the first one visible
-                results = page.locator(selector_first_dl)
-                if results.count() == 0:
-                    raise Exception("No results found.")
+                # Get the first result container
+                first_result = page.locator(selector_result_container).first
                 
-                first_result = results.first
-                logger.info("Clicking first result...")
-                first_result.click()
+                # Extract the display name (e.g., "Drake - Started From the Bottom")
+                # Based on user snippet: <div class="result"><div>Drake - Started From the Bottom</div>...
+                display_name = first_result.locator('div').first.inner_text()
+                logger.info(f"Found song: {display_name}")
 
-                # Wait for the second download button to appear
-                # Snippet: <a href="...api/v1/download..." ...>Download</a>
-                # We look for an anchor with href containing 'api/v1/download'
+                # Click the first download button inside this result
+                first_result.locator('a[data-id]').first.click()
+
+                # Wait for the final download button to appear
                 selector_final_dl = 'a[href*="/api/v1/download"]'
                 logger.info("Waiting for final download link...")
-                page.wait_for_selector(selector_final_dl, timeout=15000) # 15s timeout
+                page.wait_for_selector(selector_final_dl, timeout=15000)
 
                 final_button = page.locator(selector_final_dl).first
                 download_url = final_button.get_attribute('href')
                 
                 logger.info(f"Found download URL: {download_url}")
-                return download_url
+                return {
+                    "url": download_url,
+                    "display_name": display_name
+                }
 
             except Exception as e:
                 logger.error(f"Error extracting link: {e}")

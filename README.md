@@ -7,6 +7,8 @@ A Python tool that acts as both a **Conversational AI Agent** and a **Model Cont
 - **Conversational Interface**: Chat with the agent; it automatically detects download requests.
 - **MCP Server Support**: Exposes a `download_song` tool for MCP-compliant clients.
 - **Smart Extraction**: Uses `ollama` to extract song titles from natural language.
+- **Automatic Metadata**: Extracts Artist and Title from the web and applies **ID3 tags** to downloaded files.
+- **Duplicate Detection**: Automatically skips downloads for songs already in your `downloads/` folder.
 - **Web Scraping**: Automates downloads from mp3juice using Playwright.
 
 ## Prerequisites
@@ -23,7 +25,7 @@ A Python tool that acts as both a **Conversational AI Agent** and a **Model Cont
 
 2.  **Install Playwright Browsers**:
     ```bash
-    playwright install
+    playwright install chromium
     ```
 
 3.  **Pull the AI Model**:
@@ -45,3 +47,10 @@ Start the MCP server to expose tools to other agents:
 ```bash
 python main.py
 ```
+
+## Architecture
+
+This project follows **Clean Architecture** principles:
+- **Use Cases**: Orchestrates the download flow and business logic.
+- **Infrastructure**: Handles external services like Playwright (Scraper), Requests (Downloader), and Mutagen (Metadata).
+- **Agent/MCP**: Entry points for interacting with the system.

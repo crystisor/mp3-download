@@ -3,3 +3,4 @@ playwright
 ollama
 requests
 beautifulsoup4
+mutagen
